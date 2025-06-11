@@ -111,5 +111,4 @@ Execute this code for the other time
 ```bash
 sudo python3 server.py
 ```
-
-
+And after this you can connect with web-brownser with https://"ip-linux":5000
