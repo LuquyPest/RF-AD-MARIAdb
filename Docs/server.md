@@ -6,8 +6,8 @@
     - [2. Create an LDAP User for Sync](./server.md/#2-create-an-ldap-user-for-sync)
 - [The Linux Part](./server.md/#the-linux-part)
     - [3. Clone the Repository](./server.md/#3-clone-the-repository)
-    - [4. Create the .env File](./server.md/#4-create-the-env-file)
-    - [5. Build and Run the Docker Container](./server.md/#5-build-and-run-the-docker-container)
+    - [4. fill env.py](./server.md/#4-fill-env.py)
+    - [5. Run the system](./server.md/#5-run-system)
 
 # The Active Directory part
 
@@ -66,8 +66,8 @@ Create a dedicated LDAP user for synchronizing data:
 
 # The Linux Part
 
-For this part you'll need docker, you can frollow this tutorial to install it proprely  
-➡️ [Official Guide to install docker](https://docs.docker.com/engine/install/)  
+For this part you'll need linux, you can frollow this tutorial to install it proprely  
+➡️ [Gude for install ubuntu server](https://www.zdnet.com/article/how-to-install-ubuntu-server-in-under-30-minutes/)  
 ⚠️ I cannot guarantee the accuracy of the information contained in this guide. ⚠️
 ## 3. Clone the Repository
 
@@ -78,27 +78,38 @@ Then navigate into the server folder
 ```bash
 cd ./RD-AD/Server
 ```
-## 4. Create the `.env` File
+## 4. Fill env.py
 
-Create a `.env` file in the [server directory](../Server/) with the following content:
+Open env.py file in the [server directory](../Server/) with the following content:
+    Replace AD-password / ip-AD :
 
 ```
-LDAPUSER=[The user you have created earlier] 
-LDAPPASS=[The password you have created earlier]
-LDAP_SERVER=ldap://[The IP of your DC] 
-DOOR_ACCESS_GROUPS_DN=[The DN of the OU containing groups assiociated with doors]
-USERS_DN=[The DN of the OU containing the users]
-DBFILE=/db/data.db #You can change this if you want
-WebServerPORT=5000 #You can change this if you want 
+LDAPUSER = "RF-AD\RO.RF-AD"
+LDAPPASS = "AD-password"
+LDAP_SERVER = "ldap://ip-AD"
+DOOR_ACCESS_GROUPS_DN = "OU=DOORS,DC=RF-AD,DC=com"
+USERS_DN = "OU=UTILISATEURS,DC=RF-AD,DC=com"
+WebServerPORT = 5000
+DBFILE = {
+    "host": "localhost",
+    "user": "root",
+    "password": "Password",
+    "database": "controle_acces"
+}
 ```
 ⚠️ **IF YOU CHANGE THE WEB SERVER PORT** ⚠️  
-You'll need to change it in the [reader code](../Client/main.py) and in the [docker-compose.yml](../Server/docker-compose.yml) and [dockerfile](../Server/Dockerfile)
+You'll need to change it in the [reader code](../Client/main.py)
 
-## 5. Build and Run the Docker Container
+## 5. Run system
 
-Execute this code 
+Execute this code for the first time
 ```bash
-docker compose build --no-cache
-docker compose up -d
+sudo ./install.sh 
 ```
+
+Execute this code for the other time 
+```bash
+sudo python3 server.py
+```
+
 
