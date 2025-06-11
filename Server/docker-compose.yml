@@ -1,0 +1,17 @@
+services:
+  rf-ad:
+    build: ./
+    ports:
+      - "5000:5000"
+    environment:
+      - LDAPUSER
+      - LDAPPASS
+      - LDAP_SERVER
+      - DOOR_ACCESS_GROUPS_DN
+      - USERS_DN
+      - DBFILE
+      - WebServerPORT
+    volumes:
+      - /opt/rf-ad/app:/app
+      - /opt/rf-ad/db:/db
+

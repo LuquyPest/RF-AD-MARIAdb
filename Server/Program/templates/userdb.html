@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/UserDB">Users</a>
+        <a href="/GroupsDB">Groups</a>
+        <a href="/LogsDB">Logs</a>
+
+    </div>
+    <div class="container">
+        <h1>Users Database</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>UPN</th>
+                    <th>RFID UID</th>
+                    <th>Member Of</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user[0] }}</td>
+                    <td>{{ user[1] }}</td>
+                    <td>{{ user[2] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
+

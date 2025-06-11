@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Logs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/UserDB">Users</a>
+        <a href="/GroupsDB">Groups</a>
+        <a href="/LogsDB">Logs</a>
+
+    </div>
+    <div class="container">
+        <h1>Latest Access Logs</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Tag UID</th>
+                    <th>Door ID</th>
+                    <th>Access Granted</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log[0] }}</td>
+                    <td>{{ log[1] }}</td>
+                    <td>{{ log[2] }}</td>
+                    <td>{{ log[4] }}</td>
+                    <td>{{ 'Yes' if log[3] == 1 else 'No' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <h1>Add Door</h1>
+        <form action="/add_door" method="post">
+            <label for="Door_id">Door ID:</label>
+            <input type="number" id="Door_id" name="Door_id" required><br><br>
+            <label for="group_cn">Group CN:</label>
+            <select id="group_cn" name="group_cn" required>
+                {% for group in existing_groups %}
+                <option value="{{ group }}">{{ group }}</option>
+                {% endfor %}
+            </select><br><br>
+            <input type="submit" value="Submit">
+        </form>
+        
+        <h1>Force LDAP Synchronization</h1>
+        <form action="/sync">
+            <input type="submit" value="Sync LDAP">
+        </form>
+    </div>
+    <script>
+        // Refresh the page every 5 seconds
+        setTimeout(function(){
+            location.reload();
+        }, 5000);
+    </script>
+</body>
+</html>

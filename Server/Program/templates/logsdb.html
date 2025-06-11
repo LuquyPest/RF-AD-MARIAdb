@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Logs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<script>
+    function filterTable() {
+        var timestampInput = document.getElementById("timestampFilter").value.toLowerCase();
+        var userInput = document.getElementById("userFilter").value.toLowerCase();
+        var rfidUidInput = document.getElementById("rfidUidFilter").value.toLowerCase();
+        var doorIdInput = document.getElementById("doorIdFilter").value.toLowerCase();
+        var table = document.getElementById("logsTable");
+        var tr = table.getElementsByTagName("tr");
+
+        for (var i = 1; i < tr.length; i++) {
+            var tdTimestamp = tr[i].getElementsByTagName("td")[0];
+            var tdUser = tr[i].getElementsByTagName("td")[1];
+            var tdRfidUid = tr[i].getElementsByTagName("td")[2];
+            var tdDoorId = tr[i].getElementsByTagName("td")[3];
+            
+            if (tdTimestamp && tdUser && tdRfidUid && tdDoorId) {
+                var timestampValue = tdTimestamp.textContent || tdTimestamp.innerText;
+                var userValue = tdUser.textContent || tdUser.innerText;
+                var rfidUidValue = tdRfidUid.textContent || tdRfidUid.innerText;
+                var doorIdValue = tdDoorId.textContent || tdDoorId.innerText;
+
+                if (timestampValue.toLowerCase().indexOf(timestampInput) > -1 &&
+                    userValue.toLowerCase().indexOf(userInput) > -1 &&
+                    rfidUidValue.toLowerCase().indexOf(rfidUidInput) > -1 &&
+                    doorIdValue.toLowerCase().indexOf(doorIdInput) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }       
+        }
+    }
+</script>
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">Home</a>
+        <a href="/UserDB">Users</a>
+        <a href="/GroupsDB">Groups</a>
+        <a href="/LogsDB">Logs</a>
+
+    </div>
+<div class="container">
+    <h1>Access Logs</h1>
+    <div class="filter-container">
+        <input type="text" id="timestampFilter" onkeyup="filterTable()" placeholder="Filter by timestamp">
+        <input type="text" id="userFilter" onkeyup="filterTable()" placeholder="Filter by user">
+        <input type="text" id="rfidUidFilter" onkeyup="filterTable()" placeholder="Filter by RFID UID">
+        <input type="text" id="doorIdFilter" onkeyup="filterTable()" placeholder="Filter by door ID">
+    </div> 
+    <button onclick="window.location.href='/export_logs'">Export Logs as csv</button>
+
+    <table id="logsTable">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>RFID UID</th>
+                <th>Door ID</th>
+                <th>Access Granted</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log[0] }}</td>
+                <td>{{ log[1] }}</td>
+                <td>{{ log[2] }}</td>
+                <td>{{ log[4] }}</td>
+                <td>{{ 'Yes' if log[3] else 'No' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
