@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # RF-AD
 
 This project implements an access control system using LDAP and SQLite. It includes a web interface for managing doors and users, as well as a web API for validating RFID tags.
@@ -28,5 +27,3 @@ It was developped for the final project of my BTS SNIR (French for an IT and ele
 This project is licensed under the MIT [License](./LICENSE). See the LICENSE file for details.
 
 =======
-# RF-AD-MARIAdb
->>>>>>> 3bf61a9636d6427bc65d2a0fe93240a189f88971
