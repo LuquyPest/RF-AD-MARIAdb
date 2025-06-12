@@ -36,6 +36,10 @@
             </tbody>
         </table>
     </div>
+    <div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000;">
+        <a href="{{ url_for('create_user') }}" class="btn btn-primary">➕ Créer un utilisateur</a>
+        <a href="{{ url_for('delete_user_form') }}" class="btn btn-primary">❌ Supprimer un utilisateur</a>
+    </div>
 </body>
 </html>
 
