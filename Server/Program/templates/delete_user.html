@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Suppression d'utilisateurs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-light">
+            <div class="navbar">
+            <a href="/">Home</a>
+            <a href="/UserDB">Users</a>
+            <a href="/GroupsDB">Groups</a>
+            <a href="/LogsDB">Logs</a>
+
+        </div>
+    <div class="container mt-5">
+        <h2 class="mb-4">Liste des utilisateurs</h2>
+
+        <table class="table table-bordered table-striped">
+            <thead class="table-primary">
+                <tr>
+                    <th>Nom d'utilisateur</th>
+                    <th>Groupes</th>
+                    <th>UID RFID</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user[0].split('@')[0] }}</td>     <!-- nom d’utilisateur (à partir de upn) -->
+                    <td>{{ user[2] }}</td>                   <!-- groupes -->
+                    <td>{{ user[1] }}</td>                   <!-- RFID -->
+
+                    <td>
+                        <form action="{{ url_for('delete_user') }}" method="POST" onsubmit="return confirm('Supprimer {{ user[0].split('@')[0] }} ?');">
+                            <input type="hidden" name="rfid_uid" value="{{ user[1] }}"> <!-- UID RFID -->
+                            <input type="hidden" name="user_cn" value="{{ user[0].split('@')[0] }}"> <!-- CN (pour LDAP) -->
+                            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                        </form>
+
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Aucun utilisateur trouvé</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
