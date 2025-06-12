@@ -1,5 +1,7 @@
 import io
 from threading import Thread
+from ldapSync import create_user_in_ldap
+from env import DOOR_ACCESS_GROUPS_DN
 
 from database import (
     add_door_to_database,
@@ -11,6 +13,7 @@ from database import (
     get_logs,
     get_users,
     log_access_attempt,
+    delete_user_from_database_by_rfid,
 )
 from env import DBFILE, WebServerPORT
 from flask import (
@@ -22,6 +25,8 @@ from flask import (
     request,
 )
 from ldapSync import sync_ldap_to_database
+from ldapSync import delete_user_from_ldap
+
 
 app = Flask(__name__)
 
@@ -35,7 +40,7 @@ def index():
     return render_template("./index.html", existing_groups=existing_groups, logs=logs)
 if __name__ == "__main__":
     app.run(ssl_context=('cert.pem', 'key.pem'))
-
+    
 # Route to display the fuser db
 @app.route("/UserDB")
 def usersdb():
@@ -44,11 +49,49 @@ def usersdb():
 if __name__ == "__main__":
     app.run(ssl_context=('cert.pem', 'key.pem'))
 
+@app.route('/delete_user_form')
+def delete_user_form():
+    users = get_users()  # à adapter selon ta source
+    # print("[DEBUG] Utilisateurs restants :", users)
+    return render_template('delete_user.html', users=users)
+
+
+if __name__ == "__main__":
+    app.run(ssl_context=('cert.pem', 'key.pem'))
+
+
+@app.route('/delete_user', methods=['POST'])
+def delete_user():
+    user_cn = request.form['user_cn']
+    rfid_uid = request.form['rfid_uid']
+
+    ldap_ok = delete_user_from_ldap(user_cn)
+    db_ok = delete_user_from_database_by_rfid(rfid_uid)
+
+    # Message facultatif ici si tu veux l'afficher via SweetAlert plus tard
+    if ldap_ok and db_ok:
+        print(f"[OK] {user_cn} supprimé de l'AD et de la base.")
+    elif ldap_ok:
+        print(f"[WARN] {user_cn} supprimé de l'AD, mais pas de la base.")
+    elif db_ok:
+        print(f"[WARN] {user_cn} supprimé de la base, mais pas de l'AD.")
+    else:
+        print(f"[ERREUR] {user_cn} n'a pas pu être supprimé.")
+
+    return redirect('/delete_user_form')  # ✅ ce return est obligatoire
+
+
+
+
+if __name__ == "__main__":
+    app.run(ssl_context=('cert.pem', 'key.pem'))
+
 # Route to display the fuser db
 @app.route("/LogsDB")
 def logsdb():
     logs = get_logs()
     return render_template("logsdb.html", logs=logs)
+
 if __name__ == "__main__":
     app.run(ssl_context=('cert.pem', 'key.pem'))
 
@@ -126,13 +169,34 @@ def door_access():
 
     access_granted, upn = check_access(rfid_uid, door_id)
     if access_granted:
-        log_access_attempt(DBFILE, upn, rfid_uid, True, door_id)
+        log_access_attempt(upn, rfid_uid, True, door_id)
         return jsonify({"access_granted": True, "upn": upn}), 200
 
-    log_access_attempt(DBFILE, upn, rfid_uid, False, door_id)
+    log_access_attempt(upn, rfid_uid, False, door_id)
     return jsonify({"access_granted": False}), 403
 if __name__ == "__main__":
     app.run(ssl_context=('cert.pem', 'key.pem'))
+
+@app.route("/create_user", methods=["GET", "POST"])
+def create_user():
+    if request.method == "GET":
+        groups = get_existing_groups()
+        return render_template("create_user.html", groups=groups)
+
+    # POST
+    upn = request.form["upn"]
+    password = request.form["password"]
+    rfid_uid = request.form["rfid_uid"]
+    selected_groups = request.form.getlist("groups")
+
+    groups_dn = [f"CN={g},{DOOR_ACCESS_GROUPS_DN}" for g in selected_groups]
+    success, message = create_user_in_ldap(upn, password, rfid_uid, groups_dn)
+
+    return redirect('/')
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
 
 def run_flask_app():
     """Run the Flask web application.
@@ -159,3 +223,4 @@ def run_webServer_thread():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
