@@ -18,9 +18,6 @@ But you can also used an other Linux distribution exemple : Almalinux / alpine .
 ### 2. Install the server
 ➡️ [Here is the guide](./Docs/server.md)
 
-### 3. How to use
-➡️ [Here is the guide](./Docs/usage.md)
-
 ## Licence
 
 This project is licensed under the MIT [License](./LICENSE). See the LICENSE file for details.
