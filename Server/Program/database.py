@@ -164,14 +164,40 @@ def get_existing_groups():
         print(f"MariaDB Error: {e}")
         return []
 
+from ldapSync import delete_group_from_ldap
 
 def delete_group_from_database(group_cn):
+    # Supprimer d'abord dans l'AD
+    delete_group_from_ldap(group_cn)
+
+    # Ensuite supprimer en base de données
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM Groups WHERE cn = %s", (group_cn,))
-    cursor.execute("DELETE FROM Doors WHERE GroupCn = %s", (group_cn,))
-    conn.commit()
-    conn.close()
+    try:
+        cursor.execute("DELETE FROM Doors WHERE GroupCn = %s", (group_cn,))
+        cursor.execute("DELETE FROM Groups WHERE cn = %s", (group_cn,))
+        conn.commit()
+    except Exception as e:
+        print(f"MariaDB Error during group deletion: {e}")
+    finally:
+        conn.close()
+
+def delete_user_from_database_by_rfid(rfid_uid):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM Users WHERE rFIDUID = %s", (rfid_uid,))
+        conn.commit()
+        print(f"[DB] Utilisateur supprimé par RFID : {rfid_uid}")
+        return True
+    except Exception as e:
+        print(f"[DB] Erreur suppression RFID : {e}")
+        return False
+    finally:
+        conn.close()
+
+
+
 
 
 def get_doors():
