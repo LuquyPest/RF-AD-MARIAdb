@@ -34,7 +34,7 @@ app = Flask(__name__)
 # Route to the home
 @app.route("/")
 def index():
-    existing_groups = get_existing_groups()  # Update with your database file path
+    existing_groups = get_existing_groups()
     logs = get_latest_logs(5)
     # print(logs[0])
     return render_template("./index.html", existing_groups=existing_groups, logs=logs)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
 @app.route('/delete_user_form')
 def delete_user_form():
-    users = get_users()  # à adapter selon ta source
+    users = get_users()
     # print("[DEBUG] Utilisateurs restants :", users)
     return render_template('delete_user.html', users=users)
 
@@ -68,7 +68,6 @@ def delete_user():
     ldap_ok = delete_user_from_ldap(user_cn)
     db_ok = delete_user_from_database_by_rfid(rfid_uid)
 
-    # Message facultatif ici si tu veux l'afficher via SweetAlert plus tard
     if ldap_ok and db_ok:
         print(f"[OK] {user_cn} supprimé de l'AD et de la base.")
     elif ldap_ok:
@@ -78,7 +77,7 @@ def delete_user():
     else:
         print(f"[ERREUR] {user_cn} n'a pas pu être supprimé.")
 
-    return redirect('/delete_user_form')  # ✅ ce return est obligatoire
+    return redirect('/delete_user_form') 
 
 
 
