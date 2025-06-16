@@ -1,6 +1,6 @@
 import mysql.connector
 from datetime import datetime
-from env import DBFILE  # DBFILE devient un dictionnaire avec les infos MariaDB
+from env import DBFILE
 
 
 def get_connection():
@@ -67,7 +67,7 @@ def setup_database():
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Ordre corrigé pour éviter les erreurs de foreign key
+
     if not table_exists(cursor, "Groups"):
         create_groups_table(cursor)
     if not table_exists(cursor, "Users"):
