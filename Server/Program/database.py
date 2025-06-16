@@ -1,8 +1,8 @@
-import mysql.connector
-from datetime import datetime
-from env import DBFILE
+import mysql.connector  # Permet de se connecter à une base de données MySQL/MariaDB
+from datetime import datetime  # Utilisé pour générer des horodatages
+from env import DBFILE  # Fichier contenant les informations de connexion à la base
 
-
+# Fonction qui établit une connexion à la base de données en utilisant les infos de env.py
 def get_connection():
     return mysql.connector.connect(
         host=DBFILE['host'],
@@ -11,7 +11,7 @@ def get_connection():
         database=DBFILE['database']
     )
 
-
+# Vérifie si une table existe déjà dans la base de données
 def table_exists(cursor, table_name):
     cursor.execute("""
         SELECT COUNT(*) FROM information_schema.tables
@@ -19,54 +19,53 @@ def table_exists(cursor, table_name):
     """, (DBFILE['database'], table_name))
     return cursor.fetchone()[0] > 0
 
-
+# Crée la table "Users" pour stocker les utilisateurs
 def create_users_table(cursor):
     cursor.execute("""
         CREATE TABLE Users (
-            upn VARCHAR(255) PRIMARY KEY,
-            rFIDUID VARCHAR(255),
-            MemberOf TEXT
+            upn VARCHAR(255) PRIMARY KEY,       -- Identifiant unique (User Principal Name)
+            rFIDUID VARCHAR(255),               -- UID de la carte RFID
+            MemberOf TEXT                       -- Groupes auxquels l'utilisateur appartient (séparés par virgule)
         )
     """)
 
-
+# Crée la table "Groups" pour stocker les noms de groupes
 def create_groups_table(cursor):
     cursor.execute("""
         CREATE TABLE Groups (
-            cn VARCHAR(255) PRIMARY KEY
+            cn VARCHAR(255) PRIMARY KEY          -- Common Name du groupe
         )
     """)
 
-
+# Crée la table "Doors" qui lie une porte à un groupe
 def create_doors_table(cursor):
     cursor.execute("""
         CREATE TABLE Doors (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            GroupCn VARCHAR(255),
-            FOREIGN KEY (GroupCn) REFERENCES Groups(cn)
+            id INT PRIMARY KEY AUTO_INCREMENT,   -- Identifiant unique de la porte
+            GroupCn VARCHAR(255),                -- Groupe autorisé à accéder à cette porte
+            FOREIGN KEY (GroupCn) REFERENCES Groups(cn) -- Clé étrangère vers Groups
         )
     """)
 
-
+# Crée la table "log" pour enregistrer les tentatives d'accès
 def create_logs_table(cursor):
     cursor.execute("""
         CREATE TABLE log (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            timestamp DATETIME,
-            user VARCHAR(255),
-            rFIDUID VARCHAR(255),
-            door_id INT,
-            granted BOOLEAN,
+            id INT PRIMARY KEY AUTO_INCREMENT,   -- ID du log
+            timestamp DATETIME,                  -- Horodatage de la tentative
+            user VARCHAR(255),                   -- UPN de l'utilisateur
+            rFIDUID VARCHAR(255),                -- UID RFID utilisé
+            door_id INT,                         -- Porte concernée
+            granted BOOLEAN,                     -- Accès autorisé ou refusé
             FOREIGN KEY (door_id) REFERENCES Doors(id),
             FOREIGN KEY (user) REFERENCES Users(upn)
         )
     """)
 
-
+# Crée toutes les tables nécessaires si elles n'existent pas
 def setup_database():
     conn = get_connection()
     cursor = conn.cursor()
-
 
     if not table_exists(cursor, "Groups"):
         create_groups_table(cursor)
@@ -80,7 +79,7 @@ def setup_database():
     conn.commit()
     conn.close()
 
-
+# Insère un log dans la base suite à une tentative d'accès
 def log_access_attempt(user, rFIDUID, granted, doorID):
     conn = get_connection()
     cursor = conn.cursor()
@@ -93,41 +92,38 @@ def log_access_attempt(user, rFIDUID, granted, doorID):
     conn.commit()
     conn.close()
 
-
+# Fonctions pour afficher le contenu des tables
 def print_users_table(cursor):
     cursor.execute("SELECT * FROM Users")
     for row in cursor.fetchall():
         print(row)
-
 
 def print_groups_table(cursor):
     cursor.execute("SELECT * FROM Groups")
     for row in cursor.fetchall():
         print(row)
 
-
 def print_doors_table(cursor):
     cursor.execute("SELECT * FROM Doors")
     for row in cursor.fetchall():
         print(row)
-
 
 def print_log_table(cursor):
     cursor.execute("SELECT * FROM log")
     for row in cursor.fetchall():
         print(row)
 
-
+# Affiche les tables principales (sauf les logs)
 def print_database_content():
     conn = get_connection()
     cursor = conn.cursor()
     print_users_table(cursor)
     print_groups_table(cursor)
     print_doors_table(cursor)
-    # print_log_table(cursor)
+    # print_log_table(cursor)  # Décommenter pour voir les logs
     conn.close()
 
-
+# Récupère tous les logs
 def get_logs():
     conn = get_connection()
     cursor = conn.cursor()
@@ -139,7 +135,7 @@ def get_logs():
     conn.close()
     return logs
 
-
+# Récupère les X derniers logs (par défaut 10)
 def get_latest_logs(limit=10):
     conn = get_connection()
     cursor = conn.cursor()
@@ -151,7 +147,7 @@ def get_latest_logs(limit=10):
     conn.close()
     return logs
 
-
+# Récupère la liste des groupes existants
 def get_existing_groups():
     try:
         conn = get_connection()
@@ -164,13 +160,11 @@ def get_existing_groups():
         print(f"MariaDB Error: {e}")
         return []
 
-from ldapSync import delete_group_from_ldap
+from ldapSync import delete_group_from_ldap  # Fonction externe pour supprimer un groupe dans l'annuaire LDAP
 
+# Supprime un groupe (dans l'AD + la base)
 def delete_group_from_database(group_cn):
-    # Supprimer d'abord dans l'AD
-    delete_group_from_ldap(group_cn)
-
-    # Ensuite supprimer en base de données
+    delete_group_from_ldap(group_cn)  # Supprimer dans l'AD
     conn = get_connection()
     cursor = conn.cursor()
     try:
@@ -182,6 +176,7 @@ def delete_group_from_database(group_cn):
     finally:
         conn.close()
 
+# Supprime un utilisateur via son UID RFID
 def delete_user_from_database_by_rfid(rfid_uid):
     conn = get_connection()
     cursor = conn.cursor()
@@ -196,10 +191,7 @@ def delete_user_from_database_by_rfid(rfid_uid):
     finally:
         conn.close()
 
-
-
-
-
+# Récupère toutes les portes
 def get_doors():
     conn = get_connection()
     cursor = conn.cursor()
@@ -208,7 +200,7 @@ def get_doors():
     conn.close()
     return doors
 
-
+# Récupère tous les utilisateurs
 def get_users():
     conn = get_connection()
     cursor = conn.cursor()
@@ -217,7 +209,7 @@ def get_users():
     conn.close()
     return users
 
-
+# Ajoute une porte liée à un groupe donné
 def add_door_to_database(group_cn, Door_id):
     try:
         conn = get_connection()
@@ -230,12 +222,13 @@ def add_door_to_database(group_cn, Door_id):
         print(f"MariaDB Error: {e}")
         return False, e
 
-
+# Vérifie si un badge RFID a accès à une porte donnée
 def check_access(rfid_uid_str, door_id):
     try:
         conn = get_connection()
         cursor = conn.cursor()
 
+        # Récupère les infos utilisateur
         cursor.execute("SELECT upn, MemberOf FROM Users WHERE rFIDUID = %s", (rfid_uid_str,))
         user_data = cursor.fetchone()
         if not user_data:
@@ -243,6 +236,7 @@ def check_access(rfid_uid_str, door_id):
 
         upn, user_groups = user_data
 
+        # Récupère le groupe associé à la porte
         cursor.execute("SELECT GroupCn FROM Doors WHERE id = %s", (door_id,))
         door_group = cursor.fetchone()
         if not door_group:
@@ -250,6 +244,7 @@ def check_access(rfid_uid_str, door_id):
 
         door_group = door_group[0]
 
+        # Vérifie si l'utilisateur fait partie du groupe autorisé
         if door_group in user_groups.split(","):
             return True, upn
         return False, None
